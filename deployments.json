@@ -1,0 +1,11 @@
+{
+  "optimism": {
+    "index": "0x2A053Fe415f10C1D9A16920eeB5b5d3D05Ff792F",
+    "list": "0x8FFF92fa0B13d089380914e099b4dDa63e079dfe",
+    "connectors": "0x3fE6Bb6275A00b235E56bA99100022Eba00816A9",
+    "impls": "0x4714F064B5cd068471901AAb7ca047A495C2c1C9",
+    "account": "0x83A7A99277d588FB986b5037dD7f7eaF3d5dDcFF",
+    "defaultImpl": "0x53Aa7387fbD46B7ACd81dE0d8e6B6d467a2E3c26",
+    "mainImpl": "0xc5631c21aEd81B91160CeE00426F1866Bccb5ee8"
+  }
+}

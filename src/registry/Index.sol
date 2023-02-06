@@ -24,7 +24,7 @@ contract AddressIndex {
     event LogNewMaster(address indexed master);
     event LogUpdateMaster(address indexed master);
     event LogNewCheck(uint256 indexed accountVersion, address indexed check);
-    event LogNewAccount(address indexed _newAccount, address indexed _connectors, address indexed _check);
+    event LogNewAccount(address indexed _newAccount, address indexed _check);
 
     // New Master Address.
     address private newMaster;
@@ -33,8 +33,6 @@ contract AddressIndex {
     // List Registry Address.
     address public list;
 
-    // Connectors Modules(Account Module Version => Connectors Registry Module Address).
-    mapping(uint256 => address) public connectors;
     // Check Modules(Account Module Version => Check Module Address).
     mapping(uint256 => address) public check;
     // Account Modules(Account Module Version => Account Module Address).
@@ -84,17 +82,15 @@ contract AddressIndex {
     /**
      * @dev Add New Account Module.
      * @param _newAccount The New Account Module Address.
-     * @param _connectors Connectors Registry Module Address.
      * @param _check Check Module Address.
      */
-    function addNewAccount(address _newAccount, address _connectors, address _check) external isMaster {
+    function addNewAccount(address _newAccount, address _check) external isMaster {
         require(_newAccount != address(0), "not-valid-address");
         versionCount++;
         require(AccountInterface(_newAccount).version() == versionCount, "not-valid-version");
         account[versionCount] = _newAccount;
-        if (_connectors != address(0)) connectors[versionCount] = _connectors;
         if (_check != address(0)) check[versionCount] = _check;
-        emit LogNewAccount(_newAccount, _connectors, _check);
+        emit LogNewAccount(_newAccount, _check);
     }
 }
 
@@ -177,18 +173,15 @@ contract PolyIndex is CloneFactory {
      * @param _master The Master Address.
      * @param _list The List Address.
      * @param _account The Account Module Address.
-     * @param _connectors The Connectors Registry Module Address.
      */
-    function setBasics(address _master, address _list, address _account, address _connectors) external {
+    function setBasics(address _master, address _list, address _account) external {
         require(
-            master == address(0) && list == address(0) && account[1] == address(0) && connectors[1] == address(0)
-                && versionCount == 0,
+            master == address(0) && list == address(0) && account[1] == address(0) && versionCount == 0,
             "already-defined"
         );
         master = _master;
         list = _list;
         versionCount++;
         account[versionCount] = _account;
-        connectors[versionCount] = _connectors;
     }
 }

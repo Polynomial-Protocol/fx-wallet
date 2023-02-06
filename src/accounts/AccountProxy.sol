@@ -10,7 +10,7 @@ interface AccountImplementations {
  * instruction `delegatecall`.
  */
 
-contract PolyAccountV2 {
+contract PolyAccount {
     AccountImplementations public immutable implementations;
 
     constructor(address _implementations) {

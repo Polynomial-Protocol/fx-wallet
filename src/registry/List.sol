@@ -73,7 +73,7 @@ contract Configure is Variables {
         }
         if (userLink[_owner].first == 0) userLink[_owner].first = _account;
         userLink[_owner].last = _account;
-        userLink[_owner].count = userLink[_owner].count++;
+        userLink[_owner].count = userLink[_owner].count + 1;
     }
 
     /**
@@ -88,7 +88,7 @@ contract Configure is Variables {
         if (_next != 0) userList[_owner][_next].prev = _prev;
         if (_prev == 0) userLink[_owner].first = _next;
         if (_next == 0) userLink[_owner].last = _prev;
-        userLink[_owner].count = userLink[_owner].count--;
+        userLink[_owner].count = userLink[_owner].count - 1;
         delete userList[_owner][_account];
     }
 
@@ -104,7 +104,7 @@ contract Configure is Variables {
         }
         if (accountLink[_account].first == address(0)) accountLink[_account].first = _owner;
         accountLink[_account].last = _owner;
-        accountLink[_account].count = accountLink[_account].count++;
+        accountLink[_account].count = accountLink[_account].count + 1;
     }
 
     /**
@@ -119,7 +119,7 @@ contract Configure is Variables {
         if (_next != address(0)) accountList[_account][_next].prev = _prev;
         if (_prev == address(0)) accountLink[_account].first = _next;
         if (_next == address(0)) accountLink[_account].last = _prev;
-        accountLink[_account].count = accountLink[_account].count--;
+        accountLink[_account].count = accountLink[_account].count - 1;
         delete accountList[_account][_owner];
     }
 }

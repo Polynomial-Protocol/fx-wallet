@@ -37,7 +37,30 @@ contract ExclusiveImplementation is Constants {
         string[] eventNames,
         bytes[] eventParams
     );
+    
+    event LogEnableAdditionalUser(
+        address indexed user
+    );
+    
+    event LogDisableAdditionalUser (
+        address indexed user
+    );
+        
 
+    /**
+     * @dev Check for Auth if enabled.
+     * @param user address/user/owner.
+     */
+    function isAuth(address user) public view returns (bool) {
+        return _auth[user];
+    }
+    
+    /**
+     * @dev Check if Beta mode is enabled or not
+     */
+    function isBeta() public view returns (bool) {
+        return _beta;
+    }
 
     function decodeEvent(bytes memory response)
         internal
@@ -48,12 +71,29 @@ contract ExclusiveImplementation is Constants {
             (_eventCode, _eventParams) = abi.decode(response, (string, bytes));
         }
     }
-    
+
     /**
-     * @dev Check if Beta mode is enabled or not
+     * @dev Enable New User.
+     * @param user Owner address
      */
-    function isBeta() public view returns (bool) {
-        return _beta;
+    function enable(address user) public {
+        require(msg.sender == address(this) || msg.sender == polyIndex || isAuth(msg.sender), "not-self-index");
+        require(user != address(0), "not-valid");
+        require(!_additionalAuth[user], "already-enabled");
+        _additionalAuth[user] = true;
+        emit LogEnableAdditionalUser(user);
+    }
+
+    /**
+     * @dev Disable User.
+     * @param user Owner address
+     */
+    function disable(address user) public {
+        require(msg.sender == address(this) || msg.sender == polyIndex || isAuth(msg.sender), "not-self");
+        require(user != address(0), "not-valid");
+        require(_auth[user], "already-disabled");
+        delete _auth[user];
+        emit LogDisableAdditionalUser(user);
     }
 
     /**

@@ -95,6 +95,7 @@ contract ExclusiveImplementation is Constants {
         )
     {
         
+        require(isBeta(), "beta-not-enabled");
         uint256 _length = _targetNames.length;
         require(_auth[msg.sender] || msg.sender == polyIndex || _additionalAuth[msg.sender], "not-authorized");
         require(_length != 0, "1: length-invalid");

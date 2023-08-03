@@ -55,8 +55,12 @@ contract ExclusiveImplementation is Constants{
      * @param _target Target in which the function exists
      * @param _functionSelector Function selector restricted from being called by exclusiveCast
      */
-    function setTargetAndCallData(string memory _target, bytes4 _functionSelector) external isChief returns (bool) {
-        _restrictedTargetsAndSelectors[_target][_functionSelector] = true;
+    function setTargetAndCallData(string[] memory _target, bytes4[] memory _functionSelector) external isChief returns (bool) {
+        require(_target.length != 0, "length-invalid");
+        require(_target.length == _functionSelector.length, "length-invalid");
+        for(uint256 i = 0; i < _target.length; i++) {
+            _restrictedTargetsAndSelectors[_target[i]][_functionSelector[i]] = true;
+        }
         return true;
     }
     

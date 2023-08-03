@@ -120,24 +120,81 @@ contract ExclusiveImplementation is Constants {
             }
         }
     }
+    
+    
+    /**
+     * @dev Delegate the calls to Connector.
+     * @param _sig Signature that needs to be split into v, r, s
+     */
+    function splitSignature(bytes memory _sig) internal pure
+    returns (uint8, bytes32, bytes32)
+    {
+        require(_sig.length == 65);
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+
+        assembly {
+            // first 32 bytes, after the length prefix
+            r := mload(add(_sig, 32))
+            // second 32 bytes
+            s := mload(add(_sig, 64))
+            // final byte (first byte of the next 32 bytes)
+            v := byte(0, mload(add(_sig, 96)))
+        }
+
+        return (v, r, s);
+    }
+    
+    /**
+     * @dev Delegate the calls to Connector.
+     * @param _message Message that was signed, to obtain address that signed it
+     * @param _sig Signature after the message was signed
+     */
+    function recoverSigner(bytes32 _message, bytes memory _sig) pure public returns (address)
+    {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+
+        (v, r, s) = splitSignature(_sig);
+
+        return ecrecover(_message, v, r, s);
+    }
+
 
     /**
-     * @dev This is the main function, Where all the different functions are called
-     * from Smart Account.
-     * @param _targetNames Array of Connector address.
-     * @param _datas Array of Calldata.
+     * @dev Delegate the calls to Connector.
+     * @param _targetNamesAndCallData Abi encoded array of target names and calldata
+     * @param _sig Signed Message of Trade Details
+     * @param _origin Origin address
      */
-    function exclusiveCast(string[] calldata _targetNames, bytes[] calldata _datas, address _origin)
+    function exclusiveCast(bytes calldata _targetNamesAndCallData, bytes memory _sig, address _origin)
         external
         payable
         returns (
             bytes32 // Dummy return to fix polyIndex buildWithCast function
         )
     {
+        (uint8 v, bytes32 r, bytes32 s) = splitSignature(_sig);
         
+        bytes32 hashedTargetNamesAndCallData = keccak256(_targetNamesAndCallData);
+    
+        address signerOfMessage = ecrecover(hashedTargetNamesAndCallData, v, r, s);
+        
+        /*
+            Step 1: check if signer of message is in additional auth or not - done
+            Step 2: check if it's been 15 mins since the timestamp if so revert - done
+            Step 3: check if certain targets and calldata are being used which shouldn't (need to make seperate module for this)
+        */
+        require(_additionalAuth[signerOfMessage], "not-authorized");
         require(isBeta(), "beta-not-enabled");
+        
+        
+        (string[] memory _targetNames, bytes[] memory _datas, uint256 timestamp) = abi.decode(_targetNamesAndCallData, (string[], bytes[], uint256));
+        require(timestamp + 15 minutes > block.timestamp, "timestamp-invalid");
         uint256 _length = _targetNames.length;
-        require(_auth[msg.sender] || msg.sender == polyIndex || _additionalAuth[msg.sender], "not-authorized");
         require(_length != 0, "1: length-invalid");
         require(_length == _datas.length, "1: array-length-invalid");
         

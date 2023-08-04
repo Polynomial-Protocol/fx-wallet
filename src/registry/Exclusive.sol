@@ -41,7 +41,7 @@ contract Controllers {
 
 }
 
-contract Exclusive is Controllers {
+contract ExclusiveRegistry is Controllers {
     // Restricted targets and function selector, bytes32 = keccak256(abi.encode(target, functionSelector))
     mapping(bytes32 => bool) internal _restrictedTargetsAndSelectors;
     

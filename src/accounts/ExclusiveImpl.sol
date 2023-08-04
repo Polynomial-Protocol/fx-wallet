@@ -8,28 +8,33 @@ interface ConnectorsInterface {
     function isConnectors(string[] calldata connectorNames) external view returns (bool, address[] memory);
 }
 
-contract Constants is Variables, Controllers {
+interface ExclusiveInterface {
+    function isValidTargetAndCallData(bytes32) external view returns (bool);
+}
+
+contract Constants is Variables {
     // polyIndex Address.
     address internal immutable polyIndex;
     // Connectors Address.
     address public immutable connectors;
     // Additional Auth Module(Address of Additional Auth => bool).
     mapping(address => bool) internal _additionalAuth;
-    // Restricted targets and function selector, bytes32 = keccak256(abi.encode(target, functionSelector))
-    mapping(bytes32 => bool) internal _restrictedTargetsAndSelectors;
 
-    constructor(address _polyIndex, address _connectors) Controllers(_polyIndex) {
+    constructor(address _polyIndex, address _connectors) {
         connectors = _connectors;
         polyIndex = _polyIndex;
     }
 }
 
 contract ExclusiveImplementation is Constants{
-    constructor(address _polyIndex, address _connectors) Constants(_polyIndex, _connectors) {}
+
+    ExclusiveInterface public immutable exclusive;
+
+    constructor(address _polyIndex, address _connectors, address _exclusive) Constants(_polyIndex, _connectors) {
+        exclusive = ExclusiveInterface(_exclusive);
+    }
     
     event Exclusive(uint256 data, address where);
-    
-    receive() external payable {}
     
     event LogExclusiveCast(
         address indexed origin,
@@ -48,56 +53,14 @@ contract ExclusiveImplementation is Constants{
     event LogDisableAdditionalUser (
         address indexed user
     );
-    
-    
-    /**
-     * @dev Setting target and calldata that are restricted
-     * @param _target Target in which the function exists
-     * @param _functionSelector Function selector restricted from being called by exclusiveCast
-     */
-    function setTargetAndCallData(string[] memory _target, bytes4[] memory _functionSelector) external isChief returns (bool) {
-        require(_target.length != 0, "length-invalid");
-        require(_target.length == _functionSelector.length, "length-invalid");
-        for(uint256 i = 0; i < _target.length; i++) {
-            // _restrictedTargetsAndSelectors[_target[i]][_functionSelector[i]] = true;
-            _restrictedTargetsAndSelectors[keccak256(abi.encode(_target[i], _functionSelector[i]))] = true;
-        }
-        return true;
-    }
-    
-    /**
-     * @dev Removing target and calldata that are restricted
-     * @param _target Target in which the function exists
-     * @param _functionSelector Function selector restricted from being called by exclusiveCast
-     */
-     function removeTargetAndCallData(string memory _target, bytes4 _functionSelector) external isChief returns (bool) {
-            delete _restrictedTargetsAndSelectors[keccak256(abi.encode(_target, _functionSelector))];
-            return true; 
-     }
 
+    receive() external payable {}
     
-    /**
-     * @dev Check if Beta mode is enabled or not
-     */
-    function isBeta() public view returns (bool) {
-        return _beta;
-    }
-
-    function decodeEvent(bytes memory response)
-        internal
-        pure
-        returns (string memory _eventCode, bytes memory _eventParams)
-    {
-        if (response.length > 0) {
-            (_eventCode, _eventParams) = abi.decode(response, (string, bytes));
-        }
-    }
-
     /**
      * @dev Enable New User.
      * @param user Owner address
      */
-    function enableAdditionalAuth(address user) public isAuth(msg.sender){
+    function enableAdditionalAuth(address user) public isAuth(msg.sender) {
         require(user != address(0), "not-valid");
         require(!_additionalAuth[user], "already-enabled");
         _additionalAuth[user] = true;
@@ -114,6 +77,23 @@ contract ExclusiveImplementation is Constants{
         require(_auth[user], "already-disabled");
         delete _auth[user];
         emit LogDisableAdditionalUser(user);
+    }
+    
+    /**
+     * @dev Check if Beta mode is enabled or not
+     */
+    function isBeta() public view returns (bool) {
+        return _beta;
+    }
+
+    function decodeEvent(bytes memory response)
+        internal
+        pure
+        returns (string memory _eventCode, bytes memory _eventParams)
+    {
+        if (response.length > 0) {
+            (_eventCode, _eventParams) = abi.decode(response, (string, bytes));
+        }
     }
 
     /**
@@ -140,7 +120,6 @@ contract ExclusiveImplementation is Constants{
             }
         }
     }
-    
     
     /**
      * @dev Delegate the calls to Connector.
@@ -259,7 +238,7 @@ contract ExclusiveImplementation is Constants{
         for(uint256 i = 0; i < _length; i++) {
             bytes memory _calldata = _datas[i];
             bytes4 selector;
-            require(!_restrictedTargetsAndSelectors[keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))], "restricted-target");
+            require(exclusive.isValidTargetAndCallData(keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))), "restricted-target");
         }
 
         string[] memory eventNames = new string[](_length);

@@ -15,8 +15,8 @@ contract Constants is Variables, Controllers {
     address public immutable connectors;
     // Additional Auth Module(Address of Additional Auth => bool).
     mapping(address => bool) internal _additionalAuth;
-    // Restricted targets and function selector
-    mapping(string => mapping(bytes4 => bool)) internal _restrictedTargetsAndSelectors;
+    // Restricted targets and function selector, bytes32 = keccak256(abi.encode(target, functionSelector))
+    mapping(bytes32 => bool) internal _restrictedTargetsAndSelectors;
 
     constructor(address _polyIndex, address _connectors) Controllers(_polyIndex) {
         connectors = _connectors;
@@ -59,7 +59,8 @@ contract ExclusiveImplementation is Constants{
         require(_target.length != 0, "length-invalid");
         require(_target.length == _functionSelector.length, "length-invalid");
         for(uint256 i = 0; i < _target.length; i++) {
-            _restrictedTargetsAndSelectors[_target[i]][_functionSelector[i]] = true;
+            // _restrictedTargetsAndSelectors[_target[i]][_functionSelector[i]] = true;
+            _restrictedTargetsAndSelectors[keccak256(abi.encode(_target[i], _functionSelector[i]))] = true;
         }
         return true;
     }
@@ -70,7 +71,7 @@ contract ExclusiveImplementation is Constants{
      * @param _functionSelector Function selector restricted from being called by exclusiveCast
      */
      function removeTargetAndCallData(string memory _target, bytes4 _functionSelector) external isChief returns (bool) {
-            delete _restrictedTargetsAndSelectors[_target][_functionSelector];
+            delete _restrictedTargetsAndSelectors[keccak256(abi.encode(_target, _functionSelector))];
             return true; 
      }
 
@@ -96,8 +97,7 @@ contract ExclusiveImplementation is Constants{
      * @dev Enable New User.
      * @param user Owner address
      */
-    function enable(address user) public isAuth(msg.sender){
-        require(msg.sender == address(this) || msg.sender == polyIndex , "not-self-index");
+    function enableAdditionalAuth(address user) public isAuth(msg.sender){
         require(user != address(0), "not-valid");
         require(!_additionalAuth[user], "already-enabled");
         _additionalAuth[user] = true;
@@ -108,7 +108,7 @@ contract ExclusiveImplementation is Constants{
      * @dev Disable User.
      * @param user Owner address
      */
-    function disable(address user) public isAuth(msg.sender){
+    function disableAdditionalAuth(address user) public isAuth(msg.sender){
         require(msg.sender == address(this) || msg.sender == polyIndex, "not-self");
         require(user != address(0), "not-valid");
         require(_auth[user], "already-disabled");
@@ -192,9 +192,6 @@ contract ExclusiveImplementation is Constants{
     {
         uint256 _start = 0;
         uint256 _length = 4;
-        require(_length + 31 >= _length, "slice_overflow");
-        require(_bytes.length >= _start + _length, "slice_outOfBounds");
-
         bytes memory tempBytes;
 
         assembly {
@@ -262,7 +259,7 @@ contract ExclusiveImplementation is Constants{
         for(uint256 i = 0; i < _length; i++) {
             bytes memory _calldata = _datas[i];
             bytes4 selector;
-            require(!_restrictedTargetsAndSelectors[_targetNames[i]][getFunctionSelectorBytesMemory(_datas[i])], "restricted-target");
+            require(!_restrictedTargetsAndSelectors[keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))], "restricted-target");
         }
 
         string[] memory eventNames = new string[](_length);

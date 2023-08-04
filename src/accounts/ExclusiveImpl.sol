@@ -229,15 +229,13 @@ contract ExclusiveImplementation is Constants{
         
         
         (string[] memory _targetNames, bytes[] memory _datas, uint256 timestamp) = abi.decode(_targetNamesAndCallData, (string[], bytes[], uint256));
-        require(timestamp + 15 minutes > block.timestamp, "timestamp-invalid");
+        require(timestamp <= block.timestamp, "timestamp-invalid");
         
         uint256 _length = _targetNames.length;
         require(_length != 0, "1: length-invalid");
         require(_length == _datas.length, "1: array-length-invalid");
 
         for(uint256 i = 0; i < _length; i++) {
-            bytes memory _calldata = _datas[i];
-            bytes4 selector;
             require(exclusive.isValidTargetAndCallData(keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))), "restricted-target");
         }
 

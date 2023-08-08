@@ -17,10 +17,16 @@ contract Constants is Variables {
     address internal immutable polyIndex;
     // Connectors Address.
     address public immutable connectors;
+    // Additional Auth Struct.
+    struct Auth {
+        bool isAuth;
+        uint256 expiry;
+    }
+
     // Exclusive Implementation Registry Address.
     ExclusiveInterface public immutable exclusive;
     // Additional Auth Module(Address of Additional Auth => bool).
-    mapping(address => bool) internal _additionalAuth;
+    mapping(address => Auth) internal _additionalAuth;
 
     constructor(address _polyIndex, address _connectors, address _exclusive) {
         connectors = _connectors;
@@ -57,13 +63,15 @@ contract ExclusiveImplementation is Constants{
     
     /**
      * @dev Enable New User.
-     * @param user Owner address
+     * @param _user Owner address.
+     * @param _expiry Expiry of the user.
      */
-    function enableAdditionalAuth(address user) public isAuth(msg.sender) {
-        require(user != address(0), "not-valid");
-        require(!_additionalAuth[user], "already-enabled");
-        _additionalAuth[user] = true;
-        emit LogEnableAdditionalUser(user);
+    function enableAdditionalAuth(address _user, uint256 _expiry) public isAuth(msg.sender) {
+        require(_user != address(0), "not-valid");
+        require(!_additionalAuth[_user].isAuth , "already-enabled");
+        _additionalAuth[_user].isAuth = true;
+        _additionalAuth[_user].expiry = _expiry;
+        emit LogEnableAdditionalUser(_user);
     }
 
     /**
@@ -223,7 +231,8 @@ contract ExclusiveImplementation is Constants{
     
         address signerOfMessage = ecrecover(hashedTargetNamesAndCallData, v, r, s);
         
-        require(_additionalAuth[signerOfMessage], "not-authorized");
+        require(_additionalAuth[signerOfMessage].isAuth, "not-authorized");
+        require(_additionalAuth[signerOfMessage].expiry >= block.timestamp, "expired");
         require(isBeta(), "beta-not-enabled");
         
         

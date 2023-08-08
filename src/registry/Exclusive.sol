@@ -5,38 +5,31 @@ interface IndexInterface {
     function master() external view returns (address);
 }
 
+interface ConnectorsInterface {
+    function chief(address) external view returns (bool);
+}
+
 contract Controllers {
     event LogExclusiveController(address indexed addr, bool indexed isChief);
 
     // PolyIndex Address.
     address public immutable polyIndex;
+    // Connectors Registry Address.
+    address public immutable connectorsRegistry;
 
-    constructor(address _polyIndex) {
+    constructor(address _polyIndex, address _connectorsRegistry) {
         polyIndex = _polyIndex;
+        connectorsRegistry = _connectorsRegistry;
     }
-
-    // Enabled Chief(Address of Chief => bool).
-    mapping(address => bool) public chief;
-    // Enabled Connectors(Connector name => address).
-    mapping(string => address) public connectors;
 
     /**
      * @dev Throws if the sender not is Master Address from PolyIndex
      * or Enabled Chief.
      */
     modifier isChief() {
-        require(chief[msg.sender] || msg.sender == IndexInterface(polyIndex).master(), "not-an-chief");
+        ConnectorsInterface connectors = ConnectorsInterface(connectorsRegistry);
+        require(connectors.chief(msg.sender) || msg.sender == IndexInterface(polyIndex).master(), "not-an-chief");
         _;
-    }
-
-    /**
-     * @dev Toggle a Chief. Enable if disable & vice versa
-     * @param _chiefAddress Chief Address.
-     */
-    function toggleChief(address _chiefAddress) external {
-        require(msg.sender == IndexInterface(polyIndex).master(), "toggleChief: not-master");
-        chief[_chiefAddress] = !chief[_chiefAddress];
-        emit LogExclusiveController(_chiefAddress, chief[_chiefAddress]);
     }
 
 }
@@ -45,7 +38,7 @@ contract ExclusiveRegistry is Controllers {
     // Restricted targets and function selector, bytes32 = keccak256(abi.encode(target, functionSelector))
     mapping(bytes32 => bool) internal _restrictedTargetsAndSelectors;
     
-    constructor(address _polyIndex) Controllers(_polyIndex) {}
+    constructor(address _polyIndex, address _connectorsRegistry) Controllers(_polyIndex, _connectorsRegistry) {}
     
     event LogEnableAdditionalUser(
         address indexed user
@@ -79,7 +72,7 @@ contract ExclusiveRegistry is Controllers {
         return true;
     }
     
-    function isValidTargetAndCallData(bytes32 _targetAndSelector) external view returns (bool) {
+    function isRestrictedTargetAndCallData(bytes32 _targetAndSelector) external view returns (bool) {
         return _restrictedTargetsAndSelectors[_targetAndSelector];
     }
 }

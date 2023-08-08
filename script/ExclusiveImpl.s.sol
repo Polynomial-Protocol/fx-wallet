@@ -8,13 +8,13 @@ import {PolyImplementations} from "../src/registry/Implementations.sol";
 import {ExclusiveImplementation} from "../src/accounts/ExclusiveImpl.sol";
 import {ExclusiveRegistry} from "../src/registry/Exclusive.sol";
 
-interface Basic {
+interface BasicInterface {
   function withdraw(address, uint256, address, uint256, uint256 ) external returns (string memory, bytes memory);
 }
 
 contract DeployDummy is Script {
     function run() external {
-        console2.logBytes4(Basic.withdraw.selector);
+        console2.logBytes4(BasicInterface.withdraw.selector);
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployerAddr = vm.addr(deployerPrivateKey);
         vm.startBroadcast(deployerPrivateKey);
@@ -26,13 +26,13 @@ contract DeployDummy is Script {
         
         
         /* setting invalid target and selector */
-        ExclusiveRegistry registry = new ExclusiveRegistry(index);
+        ExclusiveRegistry registry = new ExclusiveRegistry(index, connectors);
 
         string[] memory _targets;
         bytes4[] memory _selectors;
         
         _targets[0] = 'Basic-v1';
-        _selectors[0] = Basic.withdraw.selector;
+        _selectors[0] = BasicInterface.withdraw.selector;
 
         registry.setTargetAndCallData(_targets, _selectors);
 
@@ -40,8 +40,10 @@ contract DeployDummy is Script {
 
         PolyImplementations impls = PolyImplementations(0xaE548f68329876468263CD9cc4727b3f856f22d1);
 
-        bytes4[] memory selectors = new bytes4[](1);
+        bytes4[] memory selectors = new bytes4[](3);
         selectors[0] = ExclusiveImplementation.exclusiveCast.selector;
+        selectors[1] = ExclusiveImplementation.enableAdditionalAuth.selector;
+        selectors[2] = ExclusiveImplementation.disableAdditionalAuth.selector;
 
         impls.addImplementation(address(exclusiveImpl), selectors);
 

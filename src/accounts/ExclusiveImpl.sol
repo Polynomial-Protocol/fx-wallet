@@ -9,7 +9,7 @@ interface ConnectorsInterface {
 }
 
 interface ExclusiveInterface {
-    function isValidTargetAndCallData(bytes32) external view returns (bool);
+    function isRestrictedTargetAndCallData(bytes32) external view returns (bool);
 }
 
 contract Constants is Variables {
@@ -17,22 +17,21 @@ contract Constants is Variables {
     address internal immutable polyIndex;
     // Connectors Address.
     address public immutable connectors;
+    // Exclusive Implementation Registry Address.
+    ExclusiveInterface public immutable exclusive;
     // Additional Auth Module(Address of Additional Auth => bool).
     mapping(address => bool) internal _additionalAuth;
 
-    constructor(address _polyIndex, address _connectors) {
+    constructor(address _polyIndex, address _connectors, address _exclusive) {
         connectors = _connectors;
         polyIndex = _polyIndex;
+        exclusive = ExclusiveInterface(_exclusive);
     }
 }
 
 contract ExclusiveImplementation is Constants{
 
-    ExclusiveInterface public immutable exclusive;
-
-    constructor(address _polyIndex, address _connectors, address _exclusive) Constants(_polyIndex, _connectors) {
-        exclusive = ExclusiveInterface(_exclusive);
-    }
+    constructor(address _polyIndex, address _connectors, address _exclusive) Constants(_polyIndex, _connectors, _exclusive) {}
     
     event Exclusive(uint256 data, address where);
     
@@ -235,10 +234,6 @@ contract ExclusiveImplementation is Constants{
         require(_length != 0, "1: length-invalid");
         require(_length == _datas.length, "1: array-length-invalid");
 
-        for(uint256 i = 0; i < _length; i++) {
-            require(exclusive.isValidTargetAndCallData(keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))), "restricted-target");
-        }
-
         string[] memory eventNames = new string[](_length);
         bytes[] memory eventParams = new bytes[](_length);
 
@@ -247,6 +242,7 @@ contract ExclusiveImplementation is Constants{
         require(isOk, "1: not-connector");
 
         for (uint256 i = 0; i < _length; i++) {
+            require(exclusive.isRestrictedTargetAndCallData(keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))), "restricted-target");
             bytes memory response = spell(_targets[i], _datas[i]);
             (eventNames[i], eventParams[i]) = decodeEvent(response);
         }

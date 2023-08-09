@@ -28,8 +28,8 @@ contract DeployDummy is Script {
         /* setting invalid target and selector */
         ExclusiveRegistry registry = new ExclusiveRegistry(index, connectors);
 
-        string[] memory _targets;
-        bytes4[] memory _selectors;
+        string[] memory _targets = new string[](1);
+        bytes4[] memory _selectors = new bytes4[](1);
         
         _targets[0] = 'Basic-v1';
         _selectors[0] = BasicInterface.withdraw.selector;

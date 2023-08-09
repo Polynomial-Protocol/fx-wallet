@@ -41,6 +41,7 @@ contract ExclusiveImplTest is Test {
     uint256 localKey = vm.envUint("PRIVATE_KEY_LOCAL");
 
     address public DSAwallet;
+    uint256 public immutable localKeyExpiry = block.timestamp + 1000000;
     
     function setUp() public {
         index = new PolyIndex();
@@ -111,26 +112,13 @@ contract ExclusiveImplTest is Test {
        
 
        vm.prank(vm.addr(walletOwner));
-       ExclusiveImplementation(payable(DSAwallet)).enableAdditionalAuth(vm.addr(localKey), block.timestamp + 1000000);
+       ExclusiveImplementation(payable(DSAwallet)).enableAdditionalAuth(vm.addr(localKey), localKeyExpiry);
        vm.prank(DSAwallet);
        DefaultImplementation(payable(DSAwallet)).toggleBeta();
 
     }
-
-    
-    
-    
-    
-    /*
-        test normal functionality of exclusive
-        1. create an scw wallet with 0xFA9e6f9049fF9874fa6C1Ea72C9E96285f2AEE3a as owner
-        2. create seperate key and register it as additionalAuth
-        3. make it call some connectors
-    */
     
     function test_LocalPrivateKeyCanPlaceTrades() public {
-        // vm.prank(localKey);
-        // exclusiveImpl.abi.encode();
         string[] memory _targets = new string[](1);
         bytes[] memory _calldata = new bytes[](1);
 
@@ -142,10 +130,76 @@ contract ExclusiveImplTest is Test {
 
         bytes memory signature = abi.encodePacked(r, s, v);
 
-        // console2.logBytes32(keccak256(abi.encode(_targets[0], BasicConnector.withdraw.selector)));
-        vm.prank(vm.addr(localKey));
         ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(abi.encode(_targets, _calldata, block.timestamp), signature, address(0));
-        
     }
     
+    function test_OtherPrivateKeysCantPlaceTrades() public {
+        string[] memory _targets = new string[](1);
+        bytes[] memory _calldata = new bytes[](1);
+
+        _targets[0] = "Basic-v1";
+        _calldata[0] = abi.encodeWithSelector(BasicConnector.deposit.selector, address(123), uint256(123), uint256(0), uint256(0));
+        
+        bytes32 msgHash = keccak256(abi.encode(_targets, _calldata, block.timestamp));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(walletOwner, msgHash);
+
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        vm.expectRevert('not-authorized');
+        ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(abi.encode(_targets, _calldata, block.timestamp), signature, address(0));
+    }
+    
+    function test_LocalPrivateKeyNotAllowedToWithdraw() public {
+        string[] memory _targets = new string[](1);
+        bytes[] memory _calldata = new bytes[](1);
+
+        _targets[0] = "Basic-v1";
+        _calldata[0] = abi.encodeWithSelector(BasicConnector.withdraw.selector, address(123), uint256(123), uint256(0), uint256(0));
+        
+        bytes32 msgHash = keccak256(abi.encode(_targets, _calldata, block.timestamp));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgHash);
+
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        vm.expectRevert('restricted-target');
+        ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(abi.encode(_targets, _calldata, block.timestamp), signature, address(0));
+    }
+    
+    function test_LocalKeyCallsFailAfterExpiry() public {
+        string[] memory _targets = new string[](1);
+        bytes[] memory _calldata = new bytes[](1);
+
+        _targets[0] = "Basic-v1";
+        _calldata[0] = abi.encodeWithSelector(BasicConnector.deposit.selector, address(123), uint256(123), uint256(0), uint256(100));
+        
+        uint256 initialTimestamp = 1;
+
+        bytes32 msgHash = keccak256(abi.encode(_targets, _calldata, initialTimestamp));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgHash);
+
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        vm.warp(localKeyExpiry + 1);
+        vm.expectRevert('expired');
+        ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(abi.encode(_targets, _calldata, initialTimestamp), signature, address(0));
+
+    }
+    
+    function test_OrderPlacedWithExpiryBeyondCurrentBlockFails() public {
+        string[] memory _targets = new string[](1);
+        bytes[] memory _calldata = new bytes[](1);
+
+        _targets[0] = "Basic-v1";
+        _calldata[0] = abi.encodeWithSelector(BasicConnector.deposit.selector, address(123), uint256(123), uint256(0), uint256(100));
+        
+        uint256 initialTimestamp = 100;
+
+        bytes32 msgHash = keccak256(abi.encode(_targets, _calldata, initialTimestamp));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgHash);
+
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        vm.expectRevert('timestamp-invalid');
+        ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(abi.encode(_targets, _calldata, initialTimestamp), signature, address(0));
+    }
 }

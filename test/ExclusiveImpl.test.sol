@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {PolyIndex} from "../src/registry/Index.sol";
 import {PolyList} from "../src/registry/List.sol";
@@ -142,6 +142,7 @@ contract ExclusiveImplTest is Test {
 
         bytes memory signature = abi.encodePacked(r, s, v);
 
+        // console2.logBytes32(keccak256(abi.encode(_targets[0], BasicConnector.withdraw.selector)));
         vm.prank(vm.addr(localKey));
         ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(abi.encode(_targets, _calldata, block.timestamp), signature, address(0));
         

@@ -251,7 +251,7 @@ contract ExclusiveImplementation is Constants{
         require(isOk, "1: not-connector");
 
         for (uint256 i = 0; i < _length; i++) {
-            require(exclusive.isRestrictedTargetAndCallData(keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))), "restricted-target");
+            require(!exclusive.isRestrictedTargetAndCallData(keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))), "restricted-target");
             bytes memory response = spell(_targets[i], _datas[i]);
             (eventNames[i], eventParams[i]) = decodeEvent(response);
         }

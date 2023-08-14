@@ -95,7 +95,7 @@ contract PolyConnectors is Controllers {
                 _connectorNames[i],
                 connectors[_connectorNames[i]],
                 _connectors[i]
-                );
+            );
             connectors[_connectorNames[i]] = _connectors[i];
         }
     }
@@ -111,7 +111,7 @@ contract PolyConnectors is Controllers {
             );
             emit LogConnectorRemoved(
                 keccak256(abi.encodePacked(_connectorNames[i])), _connectorNames[i], connectors[_connectorNames[i]]
-                );
+            );
             delete connectors[_connectorNames[i]];
         }
     }

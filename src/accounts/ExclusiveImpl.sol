@@ -13,15 +13,16 @@ interface ExclusiveInterface {
 }
 
 contract Constants is Variables {
-    // polyIndex Address.
-    address internal immutable polyIndex;
-    // Connectors Address.
-    address public immutable connectors;
     // Additional Auth Struct.
     struct Auth {
         bool isAuth;
         uint256 expiry;
     }
+    // polyIndex Address.
+
+    address internal immutable polyIndex;
+    // Connectors Address.
+    address public immutable connectors;
 
     // Exclusive Implementation Registry Address.
     ExclusiveInterface public immutable exclusive;
@@ -35,12 +36,11 @@ contract Constants is Variables {
     }
 }
 
-contract ExclusiveImplementation is Constants{
+contract ExclusiveImplementation is Constants {
+    constructor(address _polyIndex, address _connectors, address _exclusive)
+        Constants(_polyIndex, _connectors, _exclusive)
+    {}
 
-    constructor(address _polyIndex, address _connectors, address _exclusive) Constants(_polyIndex, _connectors, _exclusive) {}
-    
-    event Exclusive(uint256 data, address where);
-    
     event LogExclusiveCast(
         address indexed origin,
         address indexed sender,
@@ -50,48 +50,12 @@ contract ExclusiveImplementation is Constants{
         string[] eventNames,
         bytes[] eventParams
     );
-    
-    event LogEnableAdditionalUser(
-        address indexed user
-    );
-    
-    event LogDisableAdditionalUser (
-        address indexed user
-    );
+
+    event LogEnableAdditionalUser(address indexed user);
+
+    event LogDisableAdditionalUser(address indexed user);
 
     receive() external payable {}
-    
-    /**
-     * @dev Enable New User.
-     * @param _user Owner address.
-     * @param _expiry Expiry of the user.
-     */
-    function enableAdditionalAuth(address _user, uint256 _expiry) public isAuth(msg.sender) {
-        require(_user != address(0), "not-valid");
-        require(!_additionalAuth[_user].isAuth , "already-enabled");
-        _additionalAuth[_user].isAuth = true;
-        _additionalAuth[_user].expiry = _expiry;
-        emit LogEnableAdditionalUser(_user);
-    }
-
-    /**
-     * @dev Disable User.
-     * @param user Owner address
-     */
-    function disableAdditionalAuth(address user) public isAuth(msg.sender){
-        require(msg.sender == address(this) || msg.sender == polyIndex, "not-self");
-        require(user != address(0), "not-valid");
-        require(_auth[user], "already-disabled");
-        delete _auth[user];
-        emit LogDisableAdditionalUser(user);
-    }
-    
-    /**
-     * @dev Check if Beta mode is enabled or not
-     */
-    function isBeta() public view returns (bool) {
-        return _beta;
-    }
 
     function decodeEvent(bytes memory response)
         internal
@@ -127,14 +91,12 @@ contract ExclusiveImplementation is Constants{
             }
         }
     }
-    
+
     /**
      * @dev Delegate the calls to Connector.
      * @param _sig Signature that needs to be split into v, r, s
      */
-    function splitSignature(bytes memory _sig) internal pure
-    returns (uint8, bytes32, bytes32)
-    {
+    function splitSignature(bytes memory _sig) internal pure returns (uint8, bytes32, bytes32) {
         require(_sig.length == 65);
 
         bytes32 r;
@@ -152,14 +114,13 @@ contract ExclusiveImplementation is Constants{
 
         return (v, r, s);
     }
-    
+
     /**
      * @dev Delegate the calls to Connector.
      * @param _message Message that was signed, to obtain address that signed it
      * @param _sig Signature after the message was signed
      */
-    function recoverSigner(bytes32 _message, bytes memory _sig) pure public returns (address)
-    {
+    function recoverSigner(bytes32 _message, bytes memory _sig) internal pure returns (address) {
         uint8 v;
         bytes32 r;
         bytes32 s;
@@ -168,14 +129,8 @@ contract ExclusiveImplementation is Constants{
 
         return ecrecover(_message, v, r, s);
     }
-    
-    function getFunctionSelectorBytesMemory(
-        bytes memory _bytes
-    )
-        internal
-        pure
-        returns (bytes4)
-    {
+
+    function getFunctionSelectorBytesMemory(bytes memory _bytes) internal pure returns (bytes4) {
         uint256 _start = 0;
         uint256 _length = 4;
         bytes memory tempBytes;
@@ -190,14 +145,10 @@ contract ExclusiveImplementation is Constants{
                 let mc := add(add(tempBytes, lengthmod), mul(0x20, iszero(lengthmod)))
                 let end := add(mc, _length)
 
-                for {
-                    let cc := add(add(add(_bytes, lengthmod), mul(0x20, iszero(lengthmod))), _start)
-                } lt(mc, end) {
+                for { let cc := add(add(add(_bytes, lengthmod), mul(0x20, iszero(lengthmod))), _start) } lt(mc, end) {
                     mc := add(mc, 0x20)
                     cc := add(cc, 0x20)
-                } {
-                    mstore(mc, mload(cc))
-                }
+                } { mstore(mc, mload(cc)) }
                 mstore(tempBytes, _length)
                 mstore(0x40, and(add(mc, 31), not(31)))
             }
@@ -211,6 +162,37 @@ contract ExclusiveImplementation is Constants{
         return bytes4(tempBytes);
     }
 
+    /**
+     * @dev Enable New User.
+     * @param _user Owner address.
+     * @param _expiry Expiry of the user.
+     */
+    function enableAdditionalAuth(address _user, uint256 _expiry) public isAuth(msg.sender) {
+        require(_user != address(0), "not-valid");
+        require(!_additionalAuth[_user].isAuth, "already-enabled");
+        _additionalAuth[_user].isAuth = true;
+        _additionalAuth[_user].expiry = _expiry;
+        emit LogEnableAdditionalUser(_user);
+    }
+
+    /**
+     * @dev Disable User.
+     * @param user Owner address
+     */
+    function disableAdditionalAuth(address user) public isAuth(msg.sender) {
+        require(msg.sender == address(this) || msg.sender == polyIndex, "not-self");
+        require(user != address(0), "not-valid");
+        require(_auth[user], "already-disabled");
+        delete _auth[user];
+        emit LogDisableAdditionalUser(user);
+    }
+
+    /**
+     * @dev Check if Beta mode is enabled or not
+     */
+    function isBeta() public view returns (bool) {
+        return _beta;
+    }
 
     /**
      * @dev Delegate the calls to Connector.
@@ -226,19 +208,19 @@ contract ExclusiveImplementation is Constants{
         )
     {
         (uint8 v, bytes32 r, bytes32 s) = splitSignature(_sig);
-        
+
         bytes32 hashedTargetNamesAndCallData = keccak256(_targetNamesAndCallData);
-    
+
         address signerOfMessage = ecrecover(hashedTargetNamesAndCallData, v, r, s);
-        
+
         require(_additionalAuth[signerOfMessage].isAuth, "not-authorized");
         require(_additionalAuth[signerOfMessage].expiry >= block.timestamp, "expired");
         require(isBeta(), "beta-not-enabled");
-        
-        
-        (string[] memory _targetNames, bytes[] memory _datas, uint256 timestamp) = abi.decode(_targetNamesAndCallData, (string[], bytes[], uint256));
-        require(timestamp <= block.timestamp, "timestamp-invalid");
-        
+
+        (string[] memory _targetNames, bytes[] memory _datas, uint256 timestamp) =
+            abi.decode(_targetNamesAndCallData, (string[], bytes[], uint256));
+        require(timestamp <= block.timestamp, "tx-expired");
+
         uint256 _length = _targetNames.length;
         require(_length != 0, "1: length-invalid");
         require(_length == _datas.length, "1: array-length-invalid");
@@ -251,18 +233,21 @@ contract ExclusiveImplementation is Constants{
         require(isOk, "1: not-connector");
 
         for (uint256 i = 0; i < _length; i++) {
-            require(!exclusive.isRestrictedTargetAndCallData(keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))), "restricted-target");
+            require(
+                !exclusive.isRestrictedTargetAndCallData(
+                    keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))
+                ),
+                "restricted-target"
+            );
             bytes memory response = spell(_targets[i], _datas[i]);
             (eventNames[i], eventParams[i]) = decodeEvent(response);
         }
 
         emit LogExclusiveCast(_origin, msg.sender, msg.value, _targetNames, _targets, eventNames, eventParams);
-
     }
-    
+
     modifier isAuth(address user) {
         require(_auth[user], "not-wallet-owner");
         _;
     }
-    
 }

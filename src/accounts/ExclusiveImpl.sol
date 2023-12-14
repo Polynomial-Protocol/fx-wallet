@@ -194,57 +194,53 @@ contract ExclusiveImplementation is Constants {
         return _beta;
     }
 
-    struct CastInput {
-        string[] targetNames;
-        bytes[] datas;
-        uint256 timestamp;
-    }
-
     /**
      * @dev Delegate the calls to Connector.
-     * @param _castInput struct of input params
+     * @param _targetNames struct of input params
+     * @param _datas struct of input params
+     * @param _timestamp struct of input params
      * @param _sig Signed Message of Trade Details
      * @param _origin Origin address
      */
-    function exclusiveCast(CastInput calldata _castInput, bytes memory _sig, address _origin)
+    function exclusiveCast(string[] calldata _targetNames, bytes[] calldata _datas, uint256 _timestamp, bytes memory _sig, address _origin)
         external
         payable
         returns (
             bytes32 // Dummy return to fix polyIndex buildWithCast function
         )
     {
-        address signerOfMessage = getSignerAddress(_castInput.targetNames, _castInput.datas, _castInput.timestamp, _sig);
+        address signerOfMessage = getSignerAddress(_targetNames, _datas, _timestamp, _sig);
 
         require(_additionalAuth[signerOfMessage].isAuth, "not-authorized");
         require(_additionalAuth[signerOfMessage].expiry >= block.timestamp, "expired");
         require(isBeta(), "beta-not-enabled");
 
-        require(_castInput.timestamp <= block.timestamp, "tx-expired");
+        require(_timestamp <= block.timestamp, "tx-expired");
 
-        require(_castInput.targetNames.length != 0, "1: length-invalid");
-        require(_castInput.targetNames.length == _castInput.datas.length, "1: array-length-invalid");
+        require(_targetNames.length != 0, "1: length-invalid");
+        require(_targetNames.length == _datas.length, "1: array-length-invalid");
 
-        string[] memory eventNames = new string[](_castInput.targetNames.length);
-        bytes[] memory eventParams = new bytes[](_castInput.targetNames.length);
+        string[] memory eventNames = new string[](_targetNames.length);
+        bytes[] memory eventParams = new bytes[](_targetNames.length);
 
-        (bool isOk, address[] memory _targets) = ConnectorsInterface(connectors).isConnectors(_castInput.targetNames);
+        (bool isOk, address[] memory _targets) = ConnectorsInterface(connectors).isConnectors(_targetNames);
 
         require(isOk, "1: not-connector");
 
-        for (uint256 i = 0; i < _castInput.targetNames.length; i++) {
+        for (uint256 i = 0; i < _targetNames.length; i++) {
             require(
                 !exclusive.isRestrictedTargetAndCallData(
                     keccak256(
-                        abi.encode(_castInput.targetNames[i], getFunctionSelectorBytesMemory(_castInput.datas[i]))
+                        abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i]))
                     )
                 ),
                 "restricted-target"
             );
-            bytes memory response = spell(_targets[i], _castInput.datas[i]);
+            bytes memory response = spell(_targets[i], _datas[i]);
             (eventNames[i], eventParams[i]) = decodeEvent(response);
         }
 
-        emit LogExclusiveCast(_origin, msg.sender, msg.value, _castInput.targetNames, _targets, eventNames, eventParams);
+        emit LogExclusiveCast(_origin, msg.sender, msg.value, _targetNames, _targets, eventNames, eventParams);
     }
 
     modifier isAuth(address user) {

@@ -131,7 +131,7 @@ contract ExclusiveImplTest is Test {
         bytes memory signature = abi.encodePacked(r, s, v);
 
         ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(
-            ExclusiveImplementation.CastInput(_targets, _calldata, block.timestamp), signature, address(0)
+            _targets, _calldata, block.timestamp, signature, address(0)
         );
     }
 
@@ -153,7 +153,7 @@ contract ExclusiveImplTest is Test {
 
         vm.expectRevert("not-authorized");
         ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(
-            ExclusiveImplementation.CastInput(_targets, _calldata, block.timestamp), signature, address(0)
+            _targets, _calldata, block.timestamp, signature, address(0)
         );
     }
 
@@ -175,7 +175,7 @@ contract ExclusiveImplTest is Test {
 
         vm.expectRevert("restricted-target");
         ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(
-            ExclusiveImplementation.CastInput(_targets, _calldata, block.timestamp), signature, address(0)
+            _targets, _calldata, block.timestamp, signature, address(0)
         );
     }
 
@@ -201,7 +201,7 @@ contract ExclusiveImplTest is Test {
         vm.warp(localKeyExpiry + 1);
         vm.expectRevert("expired");
         ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(
-            ExclusiveImplementation.CastInput(_targets, _calldata, initialTimestamp), signature, address(0)
+            _targets, _calldata, initialTimestamp, signature, address(0)
         );
     }
 
@@ -226,7 +226,7 @@ contract ExclusiveImplTest is Test {
 
         vm.expectRevert("tx-expired");
         ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(
-            ExclusiveImplementation.CastInput(_targets, _calldata, initialTimestamp), signature, address(0)
+            _targets, _calldata, initialTimestamp, signature, address(0)
         );
     }
 }

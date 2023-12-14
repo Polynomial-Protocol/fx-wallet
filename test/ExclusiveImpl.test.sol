@@ -6,6 +6,7 @@ import {console2} from "forge-std/console2.sol";
 
 import {PolyIndex} from "../src/registry/Index.sol";
 import {PolyList} from "../src/registry/List.sol";
+
 import {PolyConnectors} from "../src/registry/Connectors.sol";
 import {PolyImplementations} from "../src/registry/Implementations.sol";
 import {PolyAccount} from "../src/accounts/AccountProxy.sol";
@@ -17,19 +18,12 @@ import {ExclusiveRegistry} from "../src/registry/Exclusive.sol";
 import {SynthetixPerpConnector} from "./mocks/connectors/SynthetixPerp.sol";
 import {BasicConnector} from "./mocks/connectors/Basic.sol";
 
-import {ECDSA} from "openzeppelin/utils/cryptography/ECDSA.sol";
-
-
 interface BasicInterface {
     function withdraw(address, uint256, address, uint256, uint256) external;
     function deposit(address token, uint256 amt, uint256 getId, uint256 setId) external;
 }
 
 contract ExclusiveImplTest is Test {
-    
-    using ECDSA for bytes;
-    using ECDSA for bytes32;
-    
     PolyIndex index;
     PolyList list;
     PolyConnectors connectors;
@@ -128,8 +122,11 @@ contract ExclusiveImplTest is Test {
         _calldata[0] =
             abi.encodeWithSelector(BasicConnector.deposit.selector, address(123), uint256(123), uint256(0), uint256(0));
 
-        bytes32 msgHash = abi.encode(_targets, _calldata, block.timestamp).toEthSignedMessageHash();
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgHash);
+        bytes32 msgHash = keccak256(abi.encode(_targets, _calldata, block.timestamp));
+
+        bytes32 msgSign = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgSign);
 
         bytes memory signature = abi.encodePacked(r, s, v);
 
@@ -146,8 +143,11 @@ contract ExclusiveImplTest is Test {
         _calldata[0] =
             abi.encodeWithSelector(BasicConnector.deposit.selector, address(123), uint256(123), uint256(0), uint256(0));
 
-        bytes32 msgHash = abi.encode(_targets, _calldata, block.timestamp).toEthSignedMessageHash();
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(walletOwner, msgHash);
+        bytes32 msgHash = keccak256(abi.encode(_targets, _calldata, block.timestamp));
+
+        bytes32 msgSign = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(walletOwner, msgSign);
 
         bytes memory signature = abi.encodePacked(r, s, v);
 
@@ -165,8 +165,11 @@ contract ExclusiveImplTest is Test {
         _calldata[0] =
             abi.encodeWithSelector(BasicConnector.withdraw.selector, address(123), uint256(123), uint256(0), uint256(0));
 
-        bytes32 msgHash = abi.encode(_targets, _calldata, block.timestamp).toEthSignedMessageHash();
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgHash);
+        bytes32 msgHash = keccak256(abi.encode(_targets, _calldata, block.timestamp));
+
+        bytes32 msgSign = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgSign);
 
         bytes memory signature = abi.encodePacked(r, s, v);
 
@@ -187,8 +190,11 @@ contract ExclusiveImplTest is Test {
 
         uint256 initialTimestamp = 1;
 
-        bytes32 msgHash = abi.encode(_targets, _calldata, initialTimestamp).toEthSignedMessageHash();
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgHash);
+        bytes32 msgHash = keccak256(abi.encode(_targets, _calldata, initialTimestamp));
+
+        bytes32 msgSign = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgSign);
 
         bytes memory signature = abi.encodePacked(r, s, v);
 
@@ -210,8 +216,11 @@ contract ExclusiveImplTest is Test {
 
         uint256 initialTimestamp = 100;
 
-        bytes32 msgHash = abi.encode(_targets, _calldata, initialTimestamp).toEthSignedMessageHash();
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgHash);
+        bytes32 msgHash = keccak256(abi.encode(_targets, _calldata, initialTimestamp));
+
+        bytes32 msgSign = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgSign);
 
         bytes memory signature = abi.encodePacked(r, s, v);
 
@@ -220,5 +229,4 @@ contract ExclusiveImplTest is Test {
             ExclusiveImplementation.CastInput(_targets, _calldata, initialTimestamp), signature, address(0)
         );
     }
-    
 }

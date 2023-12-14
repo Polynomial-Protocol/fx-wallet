@@ -3,9 +3,6 @@ pragma solidity ^0.8.9;
 
 import {Variables} from "./Variables.sol";
 import {Controllers} from "../registry/Connectors.sol";
-import {console2} from "forge-std/console2.sol";
-import {ECDSA} from "openzeppelin/utils/cryptography/ECDSA.sol";
-
 
 interface ConnectorsInterface {
     function isConnectors(string[] calldata connectorNames) external view returns (bool, address[] memory);
@@ -16,7 +13,6 @@ interface ExclusiveInterface {
 }
 
 contract Constants is Variables {
-
     // Additional Auth Struct.
     struct Auth {
         bool isAuth;
@@ -41,8 +37,6 @@ contract Constants is Variables {
 }
 
 contract ExclusiveImplementation is Constants {
-    using ECDSA for bytes;
-
     constructor(address _polyIndex, address _connectors, address _exclusive)
         Constants(_polyIndex, _connectors, _exclusive)
     {}
@@ -120,15 +114,21 @@ contract ExclusiveImplementation is Constants {
 
         return (v, r, s);
     }
-    
-    function getSignerAddress(string[] calldata _targetNames, bytes[] calldata _datas,uint256 _timestamp, bytes memory _sig) public pure returns (address) {
+
+    function getSignerAddress(
+        string[] calldata _targetNames,
+        bytes[] calldata _datas,
+        uint256 _timestamp,
+        bytes memory _sig
+    ) internal pure returns (address) {
         (uint8 v, bytes32 r, bytes32 s) = splitSignature(_sig);
 
-        bytes32 hashedTargetNamesAndCallData = abi.encode(_targetNames, _datas, _timestamp).toEthSignedMessageHash();
+        bytes32 targetCallDataHash = keccak256(abi.encode(_targetNames, _datas, _timestamp));
+        bytes32 targetCallDataHashWithPrefix =
+            keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", targetCallDataHash));
 
-        return ecrecover(hashedTargetNamesAndCallData, v, r, s);
+        return ecrecover(targetCallDataHashWithPrefix, v, r, s);
     }
-    
 
     function getFunctionSelectorBytesMemory(bytes memory _bytes) internal pure returns (bytes4) {
         uint256 _start = 0;
@@ -193,16 +193,16 @@ contract ExclusiveImplementation is Constants {
     function isBeta() public view returns (bool) {
         return _beta;
     }
-    
+
     struct CastInput {
         string[] targetNames;
         bytes[] datas;
         uint256 timestamp;
     }
-    
+
     /**
      * @dev Delegate the calls to Connector.
-     * @param _castInput struct of input params 
+     * @param _castInput struct of input params
      * @param _sig Signed Message of Trade Details
      * @param _origin Origin address
      */
@@ -213,9 +213,8 @@ contract ExclusiveImplementation is Constants {
             bytes32 // Dummy return to fix polyIndex buildWithCast function
         )
     {
-        
         address signerOfMessage = getSignerAddress(_castInput.targetNames, _castInput.datas, _castInput.timestamp, _sig);
-        
+
         require(_additionalAuth[signerOfMessage].isAuth, "not-authorized");
         require(_additionalAuth[signerOfMessage].expiry >= block.timestamp, "expired");
         require(isBeta(), "beta-not-enabled");
@@ -235,7 +234,9 @@ contract ExclusiveImplementation is Constants {
         for (uint256 i = 0; i < _castInput.targetNames.length; i++) {
             require(
                 !exclusive.isRestrictedTargetAndCallData(
-                    keccak256(abi.encode(_castInput.targetNames[i], getFunctionSelectorBytesMemory(_castInput.datas[i])))
+                    keccak256(
+                        abi.encode(_castInput.targetNames[i], getFunctionSelectorBytesMemory(_castInput.datas[i]))
+                    )
                 ),
                 "restricted-target"
             );

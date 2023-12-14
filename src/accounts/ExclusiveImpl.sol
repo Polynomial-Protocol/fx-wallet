@@ -202,7 +202,13 @@ contract ExclusiveImplementation is Constants {
      * @param _sig Signed Message of Trade Details
      * @param _origin Origin address
      */
-    function exclusiveCast(string[] calldata _targetNames, bytes[] calldata _datas, uint256 _timestamp, bytes memory _sig, address _origin)
+    function exclusiveCast(
+        string[] calldata _targetNames,
+        bytes[] calldata _datas,
+        uint256 _timestamp,
+        bytes memory _sig,
+        address _origin
+    )
         external
         payable
         returns (
@@ -230,9 +236,7 @@ contract ExclusiveImplementation is Constants {
         for (uint256 i = 0; i < _targetNames.length; i++) {
             require(
                 !exclusive.isRestrictedTargetAndCallData(
-                    keccak256(
-                        abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i]))
-                    )
+                    keccak256(abi.encode(_targetNames[i], getFunctionSelectorBytesMemory(_datas[i])))
                 ),
                 "restricted-target"
             );

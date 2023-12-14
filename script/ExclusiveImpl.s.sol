@@ -21,8 +21,8 @@ contract DeployDummy is Script {
 
         console2.log(deployerAddr);
 
-        address index = 0xC7a069dD24178DF00914d49Bf674A40A1420CF01;
-        address connectors = 0x2BDC91973bfB5B16a5652520e3960Fd68D7be5C2;
+        address index = 0xe7FcA4a9cCC5DE4917C98277e7BeE81782a5Cd01;
+        address connectors = 0x95325058C51Acc796E35F3D0309Ff098c4f818F1;
 
         /* setting invalid target and selector */
         ExclusiveRegistry registry = new ExclusiveRegistry(index, connectors);
@@ -37,7 +37,7 @@ contract DeployDummy is Script {
 
         ExclusiveImplementation exclusiveImpl = new ExclusiveImplementation(index, connectors, address(registry));
 
-        PolyImplementations impls = PolyImplementations(0xaE548f68329876468263CD9cc4727b3f856f22d1);
+        PolyImplementations impls = PolyImplementations(0xda8AAcF7358f3E03820cD586df090E5da0387713);
 
         bytes4[] memory selectors = new bytes4[](3);
         selectors[0] = ExclusiveImplementation.exclusiveCast.selector;

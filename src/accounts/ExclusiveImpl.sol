@@ -96,7 +96,7 @@ contract ExclusiveImplementation is Constants {
      * @dev Delegate the calls to Connector.
      * @param _sig Signature that needs to be split into v, r, s
      */
-    function splitSignature(bytes memory _sig) public pure returns (uint8, bytes32, bytes32) {
+    function splitSignature(bytes memory _sig) internal pure returns (uint8, bytes32, bytes32) {
         require(_sig.length == 65);
 
         bytes32 r;

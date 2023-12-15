@@ -38,6 +38,8 @@ contract DeployDummy is Script {
         ExclusiveImplementation exclusiveImpl = new ExclusiveImplementation(index, connectors, address(registry));
 
         PolyImplementations impls = PolyImplementations(0xda8AAcF7358f3E03820cD586df090E5da0387713);
+        
+        impls.removeImplementation(address(0x091739F920BBec8f05CbfC0F155155222bBcB224));
 
         bytes4[] memory selectors = new bytes4[](3);
         selectors[0] = ExclusiveImplementation.exclusiveCast.selector;

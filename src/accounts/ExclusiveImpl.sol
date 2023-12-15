@@ -167,7 +167,8 @@ contract ExclusiveImplementation is Constants {
      * @param _user Owner address.
      * @param _expiry Expiry of the user.
      */
-    function enableAdditionalAuth(address _user, uint256 _expiry) public isAuth(msg.sender) {
+    function enableAdditionalAuth(address _user, uint256 _expiry) public {
+        require(msg.sender == address(this) || msg.sender == polyIndex, "not-self-index");
         require(_user != address(0), "not-valid");
         require(!_additionalAuth[_user].isAuth, "already-enabled");
         _additionalAuth[_user].isAuth = true;
@@ -179,7 +180,7 @@ contract ExclusiveImplementation is Constants {
      * @dev Disable User.
      * @param user Owner address
      */
-    function disableAdditionalAuth(address user) public isAuth(msg.sender) {
+    function disableAdditionalAuth(address user) public {
         require(msg.sender == address(this) || msg.sender == polyIndex, "not-self");
         require(user != address(0), "not-valid");
         require(_auth[user], "already-disabled");

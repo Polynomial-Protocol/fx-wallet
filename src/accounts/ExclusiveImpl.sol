@@ -183,8 +183,8 @@ contract ExclusiveImplementation is Constants {
     function disableAdditionalAuth(address user) public {
         require(msg.sender == address(this) || msg.sender == polyIndex, "not-self");
         require(user != address(0), "not-valid");
-        require(_auth[user], "already-disabled");
-        delete _auth[user];
+        require(_additionalAuth[user].isAuth, "already-disabled");
+        delete _additionalAuth[user];
         emit LogDisableAdditionalUser(user);
     }
 

@@ -26,8 +26,8 @@
     "defaultImpl": "0xC205f8CFc2bD4306f053f68F232550520C0158aA",
     "mainImpl": "0xe2Ab318c1ef0A9C91F2395412aA8D4A2f4237758",
     "oneClickTrading": {
-      "exclusiveImpl": "0xeB496B2511061aC311578ed8E0b2B8C9175FD251",
-      "exclusiveRegistry": "0x2029E05213DaA5CD9b9b1B6B9920328FDcEbD7Da"
+      "exclusiveImpl": "0x0b3771089E64f9Fd93d03dfB84e07B553584E703",
+      "exclusiveRegistry": "0x619e4426405623c73E8c48243e14DDFfcD4D7C20"
     }
   }
 }

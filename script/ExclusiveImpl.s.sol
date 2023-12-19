@@ -54,7 +54,7 @@ contract DeployDummy is Script {
 
         PolyImplementations impls = PolyImplementations(0xda8AAcF7358f3E03820cD586df090E5da0387713);
 
-        impls.removeImplementation(address(0xc01cAAf235A0a9f717274df5998f03D90d9ECCE3));
+        impls.removeImplementation(address(0xeB496B2511061aC311578ed8E0b2B8C9175FD251));
 
         bytes4[] memory selectors = new bytes4[](3);
         selectors[0] = ExclusiveImplementation.exclusiveCast.selector;

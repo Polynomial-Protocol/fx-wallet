@@ -108,7 +108,7 @@ contract ExclusiveImplTest is Test {
 
         DSAwallet = index.build(vm.addr(walletOwner), 1, address(0));
 
-        vm.prank(vm.addr(walletOwner));
+        vm.prank(DSAwallet);
         ExclusiveImplementation(payable(DSAwallet)).enableAdditionalAuth(vm.addr(localKey), localKeyExpiry);
         vm.prank(DSAwallet);
         DefaultImplementation(payable(DSAwallet)).toggleBeta();
@@ -224,9 +224,35 @@ contract ExclusiveImplTest is Test {
 
         bytes memory signature = abi.encodePacked(r, s, v);
 
+        vm.warp(initialTimestamp + 1);
         vm.expectRevert("tx-expired");
         ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(
             _targets, _calldata, initialTimestamp, signature, address(0)
         );
+    }
+    
+    function test_NormalOrderPlacing() public {
+        string[] memory _targets = new string[](1);
+        bytes[] memory _calldata = new bytes[](1);
+        
+        _targets[0] = "Basic-v1";
+        _calldata[0] = abi.encodeWithSelector(
+            BasicConnector.deposit.selector, address(123), uint256(123), uint256(0), uint256(100)
+        );
+
+        uint256 initialTimestamp = 100;
+
+        bytes32 msgHash = keccak256(abi.encode(_targets, _calldata, initialTimestamp));
+
+        bytes32 msgSign = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(localKey, msgSign);
+
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        ExclusiveImplementation(payable(DSAwallet)).exclusiveCast(
+            _targets, _calldata, initialTimestamp, signature, address(0)
+        );
+
     }
 }

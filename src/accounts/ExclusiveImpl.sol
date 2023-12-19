@@ -222,7 +222,7 @@ contract ExclusiveImplementation is Constants {
         require(_additionalAuth[signerOfMessage].expiry >= block.timestamp, "expired");
         require(isBeta(), "beta-not-enabled");
 
-        require(_timestamp <= block.timestamp, "tx-expired");
+        require(_timestamp >= block.timestamp, "tx-expired");
 
         require(_targetNames.length != 0, "1: length-invalid");
         require(_targetNames.length == _datas.length, "1: array-length-invalid");

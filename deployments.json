@@ -46,6 +46,10 @@
     "impls": "0x6c4c4971936F091Ba351a4e9B621FcCDC03455e4",
     "account": "0xA8BBBf760A0fFc28A5B1fF6AFe86280061445EE9",
     "defaultImpl": "0xa4c1B0B3a8B97F9951e1Bf156E9Fe19c1a17c3Db",
-    "mainImpl": "0x3EEBDDC12D6dd5fc0603998384A6EEaD1B126045"
+    "mainImpl": "0x3EEBDDC12D6dd5fc0603998384A6EEaD1B126045",
+    "oneClickTrading": {
+      "exclusiveImpl": "0x993a62d94b7C9D623F534c86F7650c38b15cfD54",
+      "exclusiveRegistry": "0x231845b98Ac79531A0673FE776aaab28BCBCd062"
+    }
   }
 }

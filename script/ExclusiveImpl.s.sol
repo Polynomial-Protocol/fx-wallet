@@ -30,8 +30,13 @@ contract DeployDummy is Script {
 
         console2.log(deployerAddr);
 
-        address index = 0xe7FcA4a9cCC5DE4917C98277e7BeE81782a5Cd01;
-        address connectors = 0x95325058C51Acc796E35F3D0309Ff098c4f818F1;
+        // base-goerli
+        // address index = 0xe7FcA4a9cCC5DE4917C98277e7BeE81782a5Cd01;
+        // address connectors = 0x95325058C51Acc796E35F3D0309Ff098c4f818F1;
+
+        // base-sepolia
+        address index = 0xF18C8a7C78b60D4b7EE00cBc1D5B62B643d03404;
+        address connectors = 0xC891d76FED18B755Fe72FFf9ae738f8dA5DEEd16;
 
         /* setting invalid target and selector */
         ExclusiveRegistry registry = new ExclusiveRegistry(index, connectors);
@@ -52,9 +57,13 @@ contract DeployDummy is Script {
 
         ExclusiveImplementation exclusiveImpl = new ExclusiveImplementation(index, connectors, address(registry));
 
-        PolyImplementations impls = PolyImplementations(0xda8AAcF7358f3E03820cD586df090E5da0387713);
+        // base-geoerli
+        // PolyImplementations impls = PolyImplementations(0xda8AAcF7358f3E03820cD586df090E5da0387713);
 
-        impls.removeImplementation(address(0xeB496B2511061aC311578ed8E0b2B8C9175FD251));
+        // base-sepolia
+        PolyImplementations impls = PolyImplementations(0x6c4c4971936F091Ba351a4e9B621FcCDC03455e4);
+
+        // impls.removeImplementation(address(0xeB496B2511061aC311578ed8E0b2B8C9175FD251));
 
         bytes4[] memory selectors = new bytes4[](3);
         selectors[0] = ExclusiveImplementation.exclusiveCast.selector;

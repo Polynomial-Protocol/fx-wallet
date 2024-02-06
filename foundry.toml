@@ -2,6 +2,7 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
+via_ir = true
 solc_version = "0.8.9"
 
 [rpc_endpoints]

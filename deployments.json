@@ -33,7 +33,11 @@
     "impls": "0xda8AAcF7358f3E03820cD586df090E5da0387713",
     "account": "0x0dE3C6C4882f54455DAb7a6E9492e6DfE3AbaDec",
     "defaultImpl": "0xC205f8CFc2bD4306f053f68F232550520C0158aA",
-    "mainImpl": "0xe2Ab318c1ef0A9C91F2395412aA8D4A2f4237758"
+    "mainImpl": "0xe2Ab318c1ef0A9C91F2395412aA8D4A2f4237758",
+    "oneClickTrading": {
+      "exclusiveImpl": "0x0b3771089E64f9Fd93d03dfB84e07B553584E703",
+      "exclusiveRegistry": "0x619e4426405623c73E8c48243e14DDFfcD4D7C20"
+    }
   },
   "base-sepolia": {
     "index": "0xF18C8a7C78b60D4b7EE00cBc1D5B62B643d03404",
@@ -42,6 +46,10 @@
     "impls": "0x6c4c4971936F091Ba351a4e9B621FcCDC03455e4",
     "account": "0xA8BBBf760A0fFc28A5B1fF6AFe86280061445EE9",
     "defaultImpl": "0xa4c1B0B3a8B97F9951e1Bf156E9Fe19c1a17c3Db",
-    "mainImpl": "0x3EEBDDC12D6dd5fc0603998384A6EEaD1B126045"
+    "mainImpl": "0x3EEBDDC12D6dd5fc0603998384A6EEaD1B126045",
+    "oneClickTrading": {
+      "exclusiveImpl": "0x993a62d94b7C9D623F534c86F7650c38b15cfD54",
+      "exclusiveRegistry": "0x231845b98Ac79531A0673FE776aaab28BCBCd062"
+    }
   }
 }

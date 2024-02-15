@@ -70,11 +70,11 @@ contract PolyLegacyConnectors is Controllers {
 
     /**
      * @dev Remove Connectors
-     * @param _connectors Array of Connector Names.
+     * @param _connectors Array of Connector Addresses.
      */
     function removeConnectors(address[] calldata _connectors) external isChief {
         for (uint256 i = 0; i < _connectors.length; i++) {
-            require(connectors[_connectors[i]], "removeConnectors: _connectorName not added to update");
+            require(connectors[_connectors[i]], "removeConnectors: _connector not added to remove");
             emit LogConnectorRemoved(_connectors[i]);
             delete connectors[_connectors[i]];
         }
@@ -82,7 +82,7 @@ contract PolyLegacyConnectors is Controllers {
 
     /**
      * @dev Check if Connector addresses are enabled.
-     * @param _connectors Array of Connector Names.
+     * @param _connectors Array of Connector Addresses.
      */
     function isConnectors(address[] calldata _connectors) external view returns (bool isOk) {
         isOk = true;

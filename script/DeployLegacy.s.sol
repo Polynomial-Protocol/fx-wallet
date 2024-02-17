@@ -13,8 +13,8 @@ contract DeployLegacy is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        address polyIndex = 0xF18C8a7C78b60D4b7EE00cBc1D5B62B643d03404;
-        PolyImplementations impls = PolyImplementations(0x6c4c4971936F091Ba351a4e9B621FcCDC03455e4);
+        address polyIndex = 0x2d4937ED79D434290c4baeA6d390b78c0bf907d8;
+        PolyImplementations impls = PolyImplementations(0x331Cf6E3E59B18a8bc776A0F652aF9E2b42781c5);
 
         PolyLegacyConnectors legacyConnectors = new PolyLegacyConnectors(polyIndex);
         LegacyImplementation legacyImpl = new LegacyImplementation(polyIndex, address(legacyConnectors));
@@ -23,7 +23,7 @@ contract DeployLegacy is Script {
         selectors[0] = LegacyImplementation.cast.selector;
 
         address[] memory connectorsToAdd = new address[](1);
-        connectorsToAdd[0] = 0x9A1c9A85214314eAb70ed34e0C8D3796b9A91955; // Base Sepolia Synthetix Perp
+        connectorsToAdd[0] = 0x3ba6A43ebf48520ea099ab07b411974f8494B390; // Base Synthetix Perp
 
         impls.addImplementation(address(legacyImpl), selectors);
         legacyConnectors.addConnectors(connectorsToAdd);
